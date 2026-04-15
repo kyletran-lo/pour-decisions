@@ -17,7 +17,8 @@ export type Vibe =
   | "easy & smooth"
   | "sweet & fun"
   | "strong & bold"
-  | "fresh & light";
+  | "fresh & light"
+  | "surprise me";
 
 export type QuizAnswers = {
   drink_type: DrinkType;
