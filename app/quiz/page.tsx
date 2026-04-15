@@ -82,6 +82,10 @@ export default function QuizPage() {
 
   const menuCount = menuItems.length;
   const budgetLabel = useMemo(() => `$${budgetMax}`, [budgetMax]);
+  const budgetProgress = useMemo(
+    () => `${((budgetMax - 6) / (60 - 6)) * 100}%`,
+    [budgetMax]
+  );
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -200,18 +204,21 @@ export default function QuizPage() {
 
             <label className="block rounded-[26px] bg-[#fbfcfa] p-5">
               <span className="text-2xl font-black tracking-tight text-[#111111]">
-                Max budget
+                💰 Max budget
               </span>
               <div className="mt-5 flex items-center gap-4">
                 <input
-                  className="h-3 flex-1 accent-[#053f35]"
+                  className="h-4 flex-1 appearance-none rounded-full bg-[#dfe8e2] accent-[#053f35] outline-none transition [&::-moz-range-thumb]:h-7 [&::-moz-range-thumb]:w-7 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-[3px] [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:bg-[#053f35] [&::-moz-range-thumb]:shadow-[0_8px_18px_rgba(5,63,53,0.28)] [&::-webkit-slider-thumb]:h-7 [&::-webkit-slider-thumb]:w-7 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-[3px] [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:bg-[#053f35] [&::-webkit-slider-thumb]:shadow-[0_8px_18px_rgba(5,63,53,0.28)]"
                   max="60"
                   min="6"
                   onChange={(event) => setBudgetMax(Number(event.target.value))}
+                  style={{
+                    background: `linear-gradient(to right, #053f35 0%, #053f35 ${budgetProgress}, #dfe8e2 ${budgetProgress}, #dfe8e2 100%)`,
+                  }}
                   type="range"
                   value={budgetMax}
                 />
-                <span className="min-w-20 rounded-[18px] bg-[#111111] px-4 py-3 text-center text-xl font-black text-white">
+                <span className="min-w-24 rounded-[20px] bg-[#071512] px-5 py-4 text-center text-2xl font-black text-white shadow-[0_12px_26px_rgba(7,21,18,0.24)]">
                   {budgetLabel}
                 </span>
               </div>
