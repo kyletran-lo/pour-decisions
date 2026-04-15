@@ -13,19 +13,29 @@ import type {
   Vibe,
 } from "@/types";
 
-const drinkTypes = [
-  "surprise",
-  "cocktail",
-  "wine",
-  "beer",
-  "sake",
-] as const;
-const vibes = [
-  "easy & smooth",
-  "sweet & fun",
-  "strong & bold",
-  "fresh & light",
-] as const;
+const drinkTypes: {
+  emoji: string;
+  label: string;
+  value: DrinkType;
+}[] = [
+  { emoji: "🍸", label: "Cocktails", value: "cocktail" },
+  { emoji: "🍷", label: "Wine", value: "wine" },
+  { emoji: "🍺", label: "Beer", value: "beer" },
+  { emoji: "🍶", label: "Sake", value: "sake" },
+  { emoji: "🎲", label: "Surprise me", value: "surprise" },
+];
+
+const vibes: {
+  emoji: string;
+  label: string;
+  value: Vibe;
+}[] = [
+  { emoji: "😌", label: "Easy & smooth", value: "easy & smooth" },
+  { emoji: "🍭", label: "Sweet & fun", value: "sweet & fun" },
+  { emoji: "🔥", label: "Strong & bold", value: "strong & bold" },
+  { emoji: "🌿", label: "Fresh & light", value: "fresh & light" },
+  { emoji: "🎲", label: "Surprise me", value: "surprise me" },
+];
 
 export default function QuizPage() {
   const router = useRouter();
@@ -146,10 +156,10 @@ export default function QuizPage() {
                 : "Menu needed"}
             </p>
             <h1 className="mx-auto max-w-sm text-5xl font-black leading-[0.95] tracking-tight">
-              What sounds good?
+              What are you in the mood for?
             </h1>
             <p className="mx-auto mt-4 max-w-xs text-lg font-semibold leading-7 text-[#5a625d]">
-              Set the mood and budget. We&apos;ll handle the order.
+              Tell us the vibe. We&apos;ll pick the drink.
             </p>
             <p className="mt-5 text-sm font-black uppercase tracking-[0.16em] text-[#17443b]">
               1 perfect pick
@@ -157,10 +167,10 @@ export default function QuizPage() {
           </div>
 
           <form
-            className="mt-9 flex flex-col gap-8 rounded-[30px] bg-white p-4 shadow-[0_24px_70px_rgba(17,24,20,0.13)]"
+            className="mt-10 flex flex-col gap-10 rounded-[30px] bg-white p-5 shadow-[0_24px_70px_rgba(17,24,20,0.13)]"
             onSubmit={handleSubmit}
           >
-            <div className="rounded-[26px] bg-[#fbfcfa] p-5">
+            <div className="rounded-[26px] bg-[#fbfcfa] p-6">
               <QuizStep
                 label="🍸 What are you in the mood for?"
                 onSelect={setDrinkType}
@@ -169,7 +179,7 @@ export default function QuizPage() {
               />
             </div>
 
-            <div className="rounded-[26px] bg-[#fbfcfa] p-5">
+            <div className="rounded-[26px] bg-[#fbfcfa] p-6">
               <QuizStep
                 label="✨ What&apos;s your vibe?"
                 onSelect={setVibe}
@@ -178,20 +188,20 @@ export default function QuizPage() {
               />
             </div>
 
-            <label className="block rounded-[26px] bg-[#fbfcfa] p-5">
+            <label className="block rounded-[26px] bg-[#fbfcfa] p-6">
               <span className="text-2xl font-black tracking-tight text-[#111111]">
-                Max budget
+                💰 Max budget
               </span>
-              <div className="mt-5 flex items-center gap-4">
+              <div className="mt-6 flex items-center gap-4">
                 <input
-                  className="h-3 flex-1 accent-[#053f35]"
+                  className="budget-slider h-3 flex-1 accent-[#053f35]"
                   max="60"
                   min="6"
                   onChange={(event) => setBudgetMax(Number(event.target.value))}
                   type="range"
                   value={budgetMax}
                 />
-                <span className="min-w-20 rounded-[18px] bg-[#111111] px-4 py-3 text-center text-xl font-black text-white">
+                <span className="min-w-24 rounded-[20px] bg-[#111111] px-5 py-4 text-center text-2xl font-black text-white shadow-[0_12px_28px_rgba(17,24,20,0.14)]">
                   {budgetLabel}
                 </span>
               </div>
@@ -208,7 +218,7 @@ export default function QuizPage() {
               disabled={isLoading}
               type="submit"
             >
-              {isLoading ? "Picking..." : "Tell me what to order"}
+              {isLoading ? "Picking..." : "Get my perfect drink 🍸"}
             </button>
           </form>
         </div>

@@ -76,6 +76,7 @@ Rules:
   - Sweet & fun means fruity, sweeter, playful.
   - Strong & bold means high alcohol, intense, bitter or rich.
   - Fresh & light means crisp, refreshing, citrusy, clean.
+  - Surprise me means choose the safest crowd-pleaser with broad appeal.
 - Choose one best pick and one backup pick from the provided menu items only.
 - Avoid risky or polarizing picks unless the user vibe is strong & bold.
 - Keep each reason to one sentence.
