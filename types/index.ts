@@ -1,5 +1,6 @@
 export type MenuItem = {
   name: string;
+  type?: DrinkType;
   description?: string;
   price?: string;
   category?: string;
@@ -10,15 +11,18 @@ export type AnalyzeMenuResponse = {
   items: MenuItem[];
 };
 
+export type DrinkType = "beer" | "wine" | "cocktail" | "sake" | "surprise";
+
+export type Vibe =
+  | "easy & smooth"
+  | "sweet & fun"
+  | "strong & bold"
+  | "fresh & light";
+
 export type QuizAnswers = {
-  mood?: string;
-  flavorPreferences?: string[];
-  dietaryRestrictions?: string[];
-  allergies?: string[];
-  budget?: string;
-  occasion?: string;
-  additionalNotes?: string;
-  [key: string]: unknown;
+  drink_type: DrinkType;
+  vibe: Vibe;
+  budget_max: number;
 };
 
 export type RecommendRequest = {
@@ -26,12 +30,16 @@ export type RecommendRequest = {
   menuItems: MenuItem[];
 };
 
-export type RecommendedItem = MenuItem & {
+export type RecommendationPick = {
+  name: string;
+  type: Exclude<DrinkType, "surprise"> | string;
+  price: string;
   reason: string;
-  matchScore?: number;
+  vibe_match: string[];
+  confidence: "high" | "medium" | "low";
 };
 
 export type RecommendResponse = {
-  recommendations: RecommendedItem[];
-  summary: string;
+  top_pick: RecommendationPick;
+  backup_pick: RecommendationPick;
 };
