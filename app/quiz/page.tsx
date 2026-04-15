@@ -34,7 +34,16 @@ const vibes = [
   "sweet & fun",
   "strong & bold",
   "fresh & light",
+  "surprise",
 ] as const;
+
+const vibeLabels: Record<Vibe, string> = {
+  "easy & smooth": "😌 Easy & smooth",
+  "sweet & fun": "🍭 Sweet & fun",
+  "strong & bold": "🔥 Strong & bold",
+  "fresh & light": "🌿 Fresh & light",
+  surprise: "🎲 Surprise me",
+};
 
 export default function QuizPage() {
   const router = useRouter();
@@ -182,6 +191,7 @@ export default function QuizPage() {
             <div className="rounded-[26px] bg-[#fbfcfa] p-5">
               <QuizStep
                 label="✨ What&apos;s your vibe?"
+                getOptionLabel={(value) => vibeLabels[value]}
                 onSelect={setVibe}
                 options={vibes}
                 selected={vibe}
