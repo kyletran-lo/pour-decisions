@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import {
-  openai,
+  getOpenAIClient,
   parseJsonResponse,
   RECOMMENDATION_PROMPT,
 } from "@/lib/llms";
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
       return errorResponse("menuItems must include at least one item.");
     }
 
-    const response = await openai.responses.create({
+    const response = await getOpenAIClient().responses.create({
       model: "gpt-4.1-mini",
       input: [
         {

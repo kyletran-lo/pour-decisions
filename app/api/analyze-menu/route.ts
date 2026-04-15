@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import {
+  getOpenAIClient,
   MENU_ANALYSIS_PROMPT,
-  openai,
   parseJsonResponse,
 } from "@/lib/llms";
 import type { AnalyzeMenuResponse } from "@/types";
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     );
     const imageUrl = `data:${image.type};base64,${imageBase64}`;
 
-    const response = await openai.responses.create({
+    const response = await getOpenAIClient().responses.create({
       model: "gpt-4.1-mini",
       input: [
         {
