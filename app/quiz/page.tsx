@@ -45,12 +45,14 @@ const vibeLabels: Record<Vibe, string> = {
   surprise: "🎲 Surprise me",
 };
 
+const budgetOptions = [5, 10, 15, 20] as const;
+
 export default function QuizPage() {
   const router = useRouter();
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [drinkType, setDrinkType] = useState<DrinkType>("surprise");
   const [vibe, setVibe] = useState<Vibe>("fresh & light");
-  const [budgetMax, setBudgetMax] = useState(18);
+  const [budgetIndex, setBudgetIndex] = useState(2);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -81,10 +83,11 @@ export default function QuizPage() {
   }, []);
 
   const menuCount = menuItems.length;
-  const budgetLabel = useMemo(() => `$${budgetMax}`, [budgetMax]);
+  const budgetMax = budgetOptions[budgetIndex];
+  const budgetLabel = budgetMax === 20 ? "$20+" : `$${budgetMax}`;
   const budgetProgress = useMemo(
-    () => `${((budgetMax - 6) / (60 - 6)) * 100}%`,
-    [budgetMax]
+    () => `${(budgetIndex / (budgetOptions.length - 1)) * 100}%`,
+    [budgetIndex]
   );
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -209,14 +212,17 @@ export default function QuizPage() {
               <div className="mt-5 flex items-center gap-4">
                 <input
                   className="h-4 flex-1 appearance-none rounded-full bg-[#dfe8e2] accent-[#053f35] outline-none transition [&::-moz-range-thumb]:h-7 [&::-moz-range-thumb]:w-7 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-[3px] [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:bg-[#053f35] [&::-moz-range-thumb]:shadow-[0_8px_18px_rgba(5,63,53,0.28)] [&::-webkit-slider-thumb]:h-7 [&::-webkit-slider-thumb]:w-7 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-[3px] [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:bg-[#053f35] [&::-webkit-slider-thumb]:shadow-[0_8px_18px_rgba(5,63,53,0.28)]"
-                  max="60"
-                  min="6"
-                  onChange={(event) => setBudgetMax(Number(event.target.value))}
+                  max={budgetOptions.length - 1}
+                  min="0"
+                  onChange={(event) =>
+                    setBudgetIndex(Number(event.target.value))
+                  }
                   style={{
                     background: `linear-gradient(to right, #053f35 0%, #053f35 ${budgetProgress}, #dfe8e2 ${budgetProgress}, #dfe8e2 100%)`,
                   }}
+                  step="1"
                   type="range"
-                  value={budgetMax}
+                  value={budgetIndex}
                 />
                 <span className="min-w-24 rounded-[20px] bg-[#071512] px-5 py-4 text-center text-2xl font-black text-white shadow-[0_12px_26px_rgba(7,21,18,0.24)]">
                   {budgetLabel}
