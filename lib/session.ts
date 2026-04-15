@@ -19,6 +19,7 @@ const vibes = new Set<Vibe>([
   "sweet & fun",
   "strong & bold",
   "fresh & light",
+  "surprise",
 ]);
 
 export function isMenuItem(value: unknown): value is MenuItem {

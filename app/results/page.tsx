@@ -21,7 +21,14 @@ export default function ResultsPage() {
     }
 
     try {
-      setRecommendation(JSON.parse(storedRecommendation) as RecommendResponse);
+      const parsedRecommendation = JSON.parse(
+        storedRecommendation
+      ) as RecommendResponse;
+      const timeoutId = window.setTimeout(() => {
+        setRecommendation(parsedRecommendation);
+      }, 0);
+
+      return () => window.clearTimeout(timeoutId);
     } catch {
       sessionStorage.removeItem("pour-decisions:recommendation");
     }
@@ -34,11 +41,11 @@ export default function ResultsPage() {
           <Link href="/">
             <Image
               alt="Pour Decisions"
-              className="h-16 w-16 rounded-[22px] object-contain shadow-[0_12px_34px_rgba(0,0,0,0.14)] transition duration-200 active:scale-[0.97]"
-              height={96}
-              src="/pour-decisions-logo.png"
+              className="h-24 w-24 rounded-[28px] object-contain shadow-[0_12px_34px_rgba(0,0,0,0.14)] transition duration-200 active:scale-[0.97]"
+              height={160}
+              src="/pour-decisions-cocktail-logo.png"
               unoptimized
-              width={96}
+              width={160}
             />
           </Link>
           <Link

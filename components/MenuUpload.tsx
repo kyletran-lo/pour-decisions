@@ -4,21 +4,7 @@ import { useEffect, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import type { AnalyzeMenuResponse, DrinkType } from "@/types";
-
-const drinkChips: { label: string; value: Exclude<DrinkType, "surprise"> }[] = [
-  { label: "Cocktails", value: "cocktail" },
-  { label: "Wine", value: "wine" },
-  { label: "Beer", value: "beer" },
-  { label: "Sake", value: "sake" },
-];
-
-const drinkEmoji: Record<Exclude<DrinkType, "surprise">, string> = {
-  cocktail: "🍸",
-  wine: "🍷",
-  beer: "🍺",
-  sake: "🍶",
-};
+import type { AnalyzeMenuResponse } from "@/types";
 
 export default function MenuUpload() {
   const router = useRouter();
@@ -27,10 +13,8 @@ export default function MenuUpload() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isFinding, setIsFinding] = useState(false);
-  const [selectedDrink, setSelectedDrink] =
-    useState<Exclude<DrinkType, "surprise"> | null>(null);
 
-  const canSubmit = Boolean(file && selectedDrink && !isLoading && !isFinding);
+  const canSubmit = Boolean(file && !isLoading && !isFinding);
 
   useEffect(() => {
     return () => {
@@ -66,11 +50,6 @@ export default function MenuUpload() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!selectedDrink) {
-      setError("Choose what you are drinking first.");
-      return;
-    }
-
     if (!file) {
       setError("Scan your menu first.");
       return;
@@ -105,7 +84,7 @@ export default function MenuUpload() {
       }
 
       sessionStorage.setItem("pour-decisions:menu", JSON.stringify(payload.items));
-      sessionStorage.setItem("pour-decisions:drink-type", selectedDrink);
+      sessionStorage.removeItem("pour-decisions:drink-type");
       router.push("/quiz");
     } catch (caughtError) {
       setError(
@@ -124,11 +103,12 @@ export default function MenuUpload() {
         <nav className="flex items-center justify-between">
           <Image
             alt="Pour Decisions"
-            className="h-16 w-16 rounded-[22px] object-contain shadow-[0_12px_34px_rgba(0,0,0,0.14)]"
-            height={96}
-            src="/pour-decisions-logo.png"
+            className="h-24 w-24 rounded-[28px] object-contain shadow-[0_12px_34px_rgba(0,0,0,0.14)]"
+            height={160}
+            priority
+            src="/pour-decisions-cocktail-logo.png"
             unoptimized
-            width={96}
+            width={160}
           />
           <p className="rounded-full bg-[#f3f5f1] px-4 py-2 text-sm font-black text-[#17443b] shadow-[0_8px_20px_rgba(18,26,21,0.05)]">
             Takes 5 seconds
@@ -148,38 +128,8 @@ export default function MenuUpload() {
             </p>
           </div>
 
-          <div className="mt-10">
-            <p className="mb-4 text-center text-sm font-black uppercase tracking-[0.16em] text-[#6b736e]">
-              What are you drinking?
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              {drinkChips.map((drink) => {
-                const isSelected = selectedDrink === drink.value;
-
-                return (
-                  <button
-                    aria-pressed={isSelected}
-                    className={`flex min-h-16 items-center justify-center gap-2 rounded-full px-4 py-4 text-center text-base font-black transition duration-200 ease-out hover:-translate-y-0.5 active:scale-[0.97] ${
-                      isSelected
-                        ? "bg-[#053f35] text-white shadow-[0_16px_32px_rgba(5,63,53,0.22)]"
-                        : "bg-[#f6f7f4] text-[#171c19] shadow-[0_8px_24px_rgba(18,26,21,0.07)] hover:bg-[#eef2eb] hover:shadow-[0_12px_28px_rgba(18,26,21,0.10)]"
-                    }`}
-                    key={drink.value}
-                    onClick={() => setSelectedDrink(drink.value)}
-                    type="button"
-                  >
-                    <span className="inline-flex h-7 w-7 items-center justify-center text-xl leading-none">
-                      {drinkEmoji[drink.value]}
-                    </span>
-                    <span>{drink.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
           <form
-            className="mt-9 rounded-[32px] bg-white p-3 shadow-[0_26px_80px_rgba(17,24,20,0.15)] transition duration-200"
+            className="mt-10 rounded-[32px] bg-white p-3 shadow-[0_26px_80px_rgba(17,24,20,0.15)] transition duration-200"
             onSubmit={handleSubmit}
           >
             <label

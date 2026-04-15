@@ -14,25 +14,64 @@ import type {
 } from "@/types";
 
 const drinkTypes = [
-  "surprise",
   "cocktail",
   "wine",
   "beer",
   "sake",
+  "surprise",
 ] as const;
+
+const menuDrinkTypes = ["cocktail", "wine", "beer", "sake"] as const;
+type MenuDrinkType = (typeof menuDrinkTypes)[number];
+
+const drinkTypeLabels: Record<DrinkType, string> = {
+  cocktail: "🍸 Cocktails",
+  wine: "🍷 Wine",
+  beer: "🍺 Beer",
+  sake: "🍶 Sake",
+  surprise: "🎲 Surprise me",
+};
+
 const vibes = [
   "easy & smooth",
   "sweet & fun",
   "strong & bold",
   "fresh & light",
+  "surprise",
 ] as const;
+
+const vibeLabels: Record<Vibe, string> = {
+  "easy & smooth": "😌 Easy & smooth",
+  "sweet & fun": "🍭 Sweet & fun",
+  "strong & bold": "🔥 Strong & bold",
+  "fresh & light": "🌿 Fresh & light",
+  surprise: "🎲 Surprise me",
+};
+
+const budgetOptions = [5, 10, 15, 20] as const;
+
+function isMenuDrinkType(value: unknown): value is MenuDrinkType {
+  return menuDrinkTypes.includes(value as MenuDrinkType);
+}
+
+function getAvailableDrinkTypes(menuItems: MenuItem[]) {
+  const availableDrinkTypes = new Set<MenuDrinkType>();
+
+  menuItems.forEach((item) => {
+    if (isMenuDrinkType(item.type)) {
+      availableDrinkTypes.add(item.type);
+    }
+  });
+
+  return availableDrinkTypes;
+}
 
 export default function QuizPage() {
   const router = useRouter();
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [drinkType, setDrinkType] = useState<DrinkType>("surprise");
   const [vibe, setVibe] = useState<Vibe>("fresh & light");
-  const [budgetMax, setBudgetMax] = useState(18);
+  const [budgetIndex, setBudgetIndex] = useState(2);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -45,31 +84,52 @@ export default function QuizPage() {
 
     try {
       const parsed = JSON.parse(storedMenu) as MenuItem[];
+      const parsedDrinkTypes = getAvailableDrinkTypes(parsed);
+      const storedDrinkType = sessionStorage.getItem(
+        "pour-decisions:drink-type"
+      );
+
       setMenuItems(parsed);
+
+      if (
+        isMenuDrinkType(storedDrinkType) &&
+        (parsedDrinkTypes.size === 0 || parsedDrinkTypes.has(storedDrinkType))
+      ) {
+        setDrinkType(storedDrinkType);
+      } else if (parsedDrinkTypes.size === 1) {
+        setDrinkType([...parsedDrinkTypes][0]);
+      }
     } catch {
       sessionStorage.removeItem("pour-decisions:menu");
-    }
-
-    const storedDrinkType = sessionStorage.getItem("pour-decisions:drink-type");
-
-    if (
-      storedDrinkType === "beer" ||
-      storedDrinkType === "wine" ||
-      storedDrinkType === "cocktail" ||
-      storedDrinkType === "sake"
-    ) {
-      setDrinkType(storedDrinkType);
     }
   }, []);
 
   const menuCount = menuItems.length;
-  const budgetLabel = useMemo(() => `$${budgetMax}`, [budgetMax]);
+  const availableDrinkTypes = useMemo(
+    () => getAvailableDrinkTypes(menuItems),
+    [menuItems]
+  );
+  const budgetMax = budgetOptions[budgetIndex];
+  const budgetLabel = budgetMax === 20 ? "$20+" : `$${budgetMax}`;
+  const budgetProgress = useMemo(
+    () => `${(budgetIndex / (budgetOptions.length - 1)) * 100}%`,
+    [budgetIndex]
+  );
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!menuItems.length) {
       setError("Upload a drink menu first.");
+      return;
+    }
+
+    if (
+      drinkType !== "surprise" &&
+      availableDrinkTypes.size > 0 &&
+      !availableDrinkTypes.has(drinkType)
+    ) {
+      setError(`${drinkTypeLabels[drinkType]} was not found on this menu.`);
       return;
     }
 
@@ -123,11 +183,11 @@ export default function QuizPage() {
           <Link href="/">
             <Image
               alt="Pour Decisions"
-              className="h-16 w-16 rounded-[22px] object-contain shadow-[0_12px_34px_rgba(0,0,0,0.14)] transition duration-200 active:scale-[0.97]"
-              height={96}
-              src="/pour-decisions-logo.png"
+              className="h-24 w-24 rounded-[28px] object-contain shadow-[0_12px_34px_rgba(0,0,0,0.14)] transition duration-200 active:scale-[0.97]"
+              height={160}
+              src="/pour-decisions-cocktail-logo.png"
               unoptimized
-              width={96}
+              width={160}
             />
           </Link>
           <Link
@@ -163,6 +223,12 @@ export default function QuizPage() {
             <div className="rounded-[26px] bg-[#fbfcfa] p-5">
               <QuizStep
                 label="🍸 What are you in the mood for?"
+                getOptionLabel={(value) => drinkTypeLabels[value]}
+                isOptionDisabled={(value) =>
+                  value !== "surprise" &&
+                  availableDrinkTypes.size > 0 &&
+                  !availableDrinkTypes.has(value)
+                }
                 onSelect={setDrinkType}
                 options={drinkTypes}
                 selected={drinkType}
@@ -172,6 +238,7 @@ export default function QuizPage() {
             <div className="rounded-[26px] bg-[#fbfcfa] p-5">
               <QuizStep
                 label="✨ What&apos;s your vibe?"
+                getOptionLabel={(value) => vibeLabels[value]}
                 onSelect={setVibe}
                 options={vibes}
                 selected={vibe}
@@ -180,18 +247,24 @@ export default function QuizPage() {
 
             <label className="block rounded-[26px] bg-[#fbfcfa] p-5">
               <span className="text-2xl font-black tracking-tight text-[#111111]">
-                Max budget
+                💰 Max budget
               </span>
               <div className="mt-5 flex items-center gap-4">
                 <input
-                  className="h-3 flex-1 accent-[#053f35]"
-                  max="60"
-                  min="6"
-                  onChange={(event) => setBudgetMax(Number(event.target.value))}
+                  className="h-4 flex-1 appearance-none rounded-full bg-[#dfe8e2] accent-[#053f35] outline-none transition [&::-moz-range-thumb]:h-7 [&::-moz-range-thumb]:w-7 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-[3px] [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:bg-[#053f35] [&::-moz-range-thumb]:shadow-[0_8px_18px_rgba(5,63,53,0.28)] [&::-webkit-slider-thumb]:h-7 [&::-webkit-slider-thumb]:w-7 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-[3px] [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:bg-[#053f35] [&::-webkit-slider-thumb]:shadow-[0_8px_18px_rgba(5,63,53,0.28)]"
+                  max={budgetOptions.length - 1}
+                  min="0"
+                  onChange={(event) =>
+                    setBudgetIndex(Number(event.target.value))
+                  }
+                  style={{
+                    background: `linear-gradient(to right, #053f35 0%, #053f35 ${budgetProgress}, #dfe8e2 ${budgetProgress}, #dfe8e2 100%)`,
+                  }}
+                  step="1"
                   type="range"
-                  value={budgetMax}
+                  value={budgetIndex}
                 />
-                <span className="min-w-20 rounded-[18px] bg-[#111111] px-4 py-3 text-center text-xl font-black text-white">
+                <span className="min-w-24 rounded-[20px] bg-[#071512] px-5 py-4 text-center text-2xl font-black text-white shadow-[0_12px_26px_rgba(7,21,18,0.24)]">
                   {budgetLabel}
                 </span>
               </div>
