@@ -124,10 +124,10 @@ export default function MenuUpload() {
         <nav className="flex items-center justify-between">
           <Image
             alt="Pour Decisions"
-            className="h-16 w-16 rounded-[22px] object-cover shadow-[0_12px_34px_rgba(0,0,0,0.14)]"
+            className="h-16 w-16 rounded-[22px] object-contain shadow-[0_12px_34px_rgba(0,0,0,0.14)]"
             height={96}
-            priority
             src="/pour-decisions-logo.png"
+            unoptimized
             width={96}
           />
           <p className="rounded-full bg-[#f3f5f1] px-4 py-2 text-sm font-black text-[#17443b] shadow-[0_8px_20px_rgba(18,26,21,0.05)]">
