@@ -21,6 +21,9 @@ const drinkTypes = [
   "surprise",
 ] as const;
 
+const menuDrinkTypes = ["cocktail", "wine", "beer", "sake"] as const;
+type MenuDrinkType = (typeof menuDrinkTypes)[number];
+
 const drinkTypeLabels: Record<DrinkType, string> = {
   cocktail: "🍸 Cocktails",
   wine: "🍷 Wine",
@@ -47,6 +50,22 @@ const vibeLabels: Record<Vibe, string> = {
 
 const budgetOptions = [5, 10, 15, 20] as const;
 
+function isMenuDrinkType(value: unknown): value is MenuDrinkType {
+  return menuDrinkTypes.includes(value as MenuDrinkType);
+}
+
+function getAvailableDrinkTypes(menuItems: MenuItem[]) {
+  const availableDrinkTypes = new Set<MenuDrinkType>();
+
+  menuItems.forEach((item) => {
+    if (isMenuDrinkType(item.type)) {
+      availableDrinkTypes.add(item.type);
+    }
+  });
+
+  return availableDrinkTypes;
+}
+
 export default function QuizPage() {
   const router = useRouter();
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -65,24 +84,31 @@ export default function QuizPage() {
 
     try {
       const parsed = JSON.parse(storedMenu) as MenuItem[];
+      const parsedDrinkTypes = getAvailableDrinkTypes(parsed);
+      const storedDrinkType = sessionStorage.getItem(
+        "pour-decisions:drink-type"
+      );
+
       setMenuItems(parsed);
+
+      if (
+        isMenuDrinkType(storedDrinkType) &&
+        (parsedDrinkTypes.size === 0 || parsedDrinkTypes.has(storedDrinkType))
+      ) {
+        setDrinkType(storedDrinkType);
+      } else if (parsedDrinkTypes.size === 1) {
+        setDrinkType([...parsedDrinkTypes][0]);
+      }
     } catch {
       sessionStorage.removeItem("pour-decisions:menu");
-    }
-
-    const storedDrinkType = sessionStorage.getItem("pour-decisions:drink-type");
-
-    if (
-      storedDrinkType === "beer" ||
-      storedDrinkType === "wine" ||
-      storedDrinkType === "cocktail" ||
-      storedDrinkType === "sake"
-    ) {
-      setDrinkType(storedDrinkType);
     }
   }, []);
 
   const menuCount = menuItems.length;
+  const availableDrinkTypes = useMemo(
+    () => getAvailableDrinkTypes(menuItems),
+    [menuItems]
+  );
   const budgetMax = budgetOptions[budgetIndex];
   const budgetLabel = budgetMax === 20 ? "$20+" : `$${budgetMax}`;
   const budgetProgress = useMemo(
@@ -95,6 +121,15 @@ export default function QuizPage() {
 
     if (!menuItems.length) {
       setError("Upload a drink menu first.");
+      return;
+    }
+
+    if (
+      drinkType !== "surprise" &&
+      availableDrinkTypes.size > 0 &&
+      !availableDrinkTypes.has(drinkType)
+    ) {
+      setError(`${drinkTypeLabels[drinkType]} was not found on this menu.`);
       return;
     }
 
@@ -189,6 +224,11 @@ export default function QuizPage() {
               <QuizStep
                 label="🍸 What are you in the mood for?"
                 getOptionLabel={(value) => drinkTypeLabels[value]}
+                isOptionDisabled={(value) =>
+                  value !== "surprise" &&
+                  availableDrinkTypes.size > 0 &&
+                  !availableDrinkTypes.has(value)
+                }
                 onSelect={setDrinkType}
                 options={drinkTypes}
                 selected={drinkType}
