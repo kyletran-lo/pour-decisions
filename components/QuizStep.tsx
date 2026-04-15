@@ -5,6 +5,7 @@ type QuizStepProps<T extends string> = {
   options: readonly T[];
   selected: T;
   onSelect: (value: T) => void;
+  getOptionLabel?: (value: T) => string;
 };
 
 export default function QuizStep<T extends string>({
@@ -12,6 +13,7 @@ export default function QuizStep<T extends string>({
   options,
   selected,
   onSelect,
+  getOptionLabel = (value) => value,
 }: QuizStepProps<T>) {
   return (
     <fieldset>
@@ -34,7 +36,7 @@ export default function QuizStep<T extends string>({
               onClick={() => onSelect(option)}
               type="button"
             >
-              {option}
+              {getOptionLabel(option)}
             </button>
           );
         })}

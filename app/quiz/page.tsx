@@ -14,12 +14,21 @@ import type {
 } from "@/types";
 
 const drinkTypes = [
-  "surprise",
   "cocktail",
   "wine",
   "beer",
   "sake",
+  "surprise",
 ] as const;
+
+const drinkTypeLabels: Record<DrinkType, string> = {
+  cocktail: "🍸 Cocktails",
+  wine: "🍷 Wine",
+  beer: "🍺 Beer",
+  sake: "🍶 Sake",
+  surprise: "🎲 Surprise me",
+};
+
 const vibes = [
   "easy & smooth",
   "sweet & fun",
@@ -163,6 +172,7 @@ export default function QuizPage() {
             <div className="rounded-[26px] bg-[#fbfcfa] p-5">
               <QuizStep
                 label="🍸 What are you in the mood for?"
+                getOptionLabel={(value) => drinkTypeLabels[value]}
                 onSelect={setDrinkType}
                 options={drinkTypes}
                 selected={drinkType}
