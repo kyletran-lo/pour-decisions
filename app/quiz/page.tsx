@@ -123,9 +123,10 @@ export default function QuizPage() {
           <Link href="/">
             <Image
               alt="Pour Decisions"
-              className="h-16 w-16 rounded-[22px] object-cover shadow-[0_12px_34px_rgba(0,0,0,0.14)] transition duration-200 active:scale-[0.97]"
+              className="h-16 w-16 rounded-[22px] object-contain shadow-[0_12px_34px_rgba(0,0,0,0.14)] transition duration-200 active:scale-[0.97]"
               height={96}
               src="/pour-decisions-logo.png"
+              unoptimized
               width={96}
             />
           </Link>
@@ -148,7 +149,7 @@ export default function QuizPage() {
               What sounds good?
             </h1>
             <p className="mx-auto mt-4 max-w-xs text-lg font-semibold leading-7 text-[#5a625d]">
-              Pick the lane. We&apos;ll handle the order.
+              Set the mood and budget. We&apos;ll handle the order.
             </p>
             <p className="mt-5 text-sm font-black uppercase tracking-[0.16em] text-[#17443b]">
               1 perfect pick
@@ -161,7 +162,7 @@ export default function QuizPage() {
           >
             <div className="rounded-[26px] bg-[#fbfcfa] p-5">
               <QuizStep
-                label="Pick a lane"
+                label="🍸 What are you in the mood for?"
                 onSelect={setDrinkType}
                 options={drinkTypes}
                 selected={drinkType}
@@ -170,7 +171,7 @@ export default function QuizPage() {
 
             <div className="rounded-[26px] bg-[#fbfcfa] p-5">
               <QuizStep
-                label="Pick the vibe"
+                label="✨ What&apos;s your vibe?"
                 onSelect={setVibe}
                 options={vibes}
                 selected={vibe}
