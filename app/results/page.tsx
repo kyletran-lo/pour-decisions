@@ -34,10 +34,11 @@ export default function ResultsPage() {
           <Link href="/">
             <Image
               alt="Pour Decisions"
-              className="h-16 w-16 rounded-[22px] object-cover shadow-[0_12px_34px_rgba(0,0,0,0.14)] transition duration-200 active:scale-[0.97]"
-              height={96}
-              src="/pour-decisions-logo.png"
-              width={96}
+              className="h-24 w-24 rounded-[28px] object-contain shadow-[0_12px_34px_rgba(0,0,0,0.14)] transition duration-200 active:scale-[0.97]"
+              height={160}
+              src="/pour-decisions-cocktail-logo.png"
+              unoptimized
+              width={160}
             />
           </Link>
           <Link
