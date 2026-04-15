@@ -45,12 +45,12 @@ export async function POST(request: Request) {
     });
 
     if (!response.output_text) {
-      return errorResponse("No recommendations returned.", 502);
+      return errorResponse("No drink picks returned.", 502);
     }
 
     const parsed = parseJsonResponse<RecommendResponse>(response.output_text);
 
-    if (!Array.isArray(parsed.recommendations) || !parsed.summary) {
+    if (!parsed.top_pick || !parsed.backup_pick) {
       return errorResponse("Recommendations returned an invalid format.", 502);
     }
 
