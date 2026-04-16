@@ -21,7 +21,14 @@ export default function ResultsPage() {
     }
 
     try {
-      setRecommendation(JSON.parse(storedRecommendation) as RecommendResponse);
+      const parsedRecommendation = JSON.parse(
+        storedRecommendation
+      ) as RecommendResponse;
+      const timeoutId = window.setTimeout(() => {
+        setRecommendation(parsedRecommendation);
+      }, 0);
+
+      return () => window.clearTimeout(timeoutId);
     } catch {
       sessionStorage.removeItem("pour-decisions:recommendation");
     }

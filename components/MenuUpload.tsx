@@ -4,21 +4,82 @@ import { useEffect, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import type { AnalyzeMenuResponse, DrinkType } from "@/types";
+import type { AnalyzeMenuResponse } from "@/types";
 
-const drinkChips: { label: string; value: Exclude<DrinkType, "surprise"> }[] = [
-  { label: "Cocktails", value: "cocktail" },
-  { label: "Wine", value: "wine" },
-  { label: "Beer", value: "beer" },
-  { label: "Sake", value: "sake" },
-];
+const MAX_UPLOAD_DIMENSION = 1600;
+const TARGET_IMAGE_TYPE = "image/jpeg";
+const TARGET_IMAGE_QUALITY = 0.82;
 
-const drinkEmoji: Record<Exclude<DrinkType, "surprise">, string> = {
-  cocktail: "🍸",
-  wine: "🍷",
-  beer: "🍺",
-  sake: "🍶",
-};
+function loadImage(file: File) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const image = new window.Image();
+
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(image);
+    };
+
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("That photo could not be processed."));
+    };
+
+    image.src = objectUrl;
+  });
+}
+
+function canvasToBlob(canvas: HTMLCanvasElement, type: string, quality: number) {
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error("That photo could not be prepared for upload."));
+        return;
+      }
+
+      resolve(blob);
+    }, type, quality);
+  });
+}
+
+async function optimizeMenuImage(file: File) {
+  if (file.size <= 1_500_000) {
+    return file;
+  }
+
+  const image = await loadImage(file);
+  const longestSide = Math.max(image.width, image.height);
+
+  if (longestSide <= MAX_UPLOAD_DIMENSION && file.type === TARGET_IMAGE_TYPE) {
+    return file;
+  }
+
+  const scale = Math.min(1, MAX_UPLOAD_DIMENSION / longestSide);
+  const canvas = document.createElement("canvas");
+
+  canvas.width = Math.max(1, Math.round(image.width * scale));
+  canvas.height = Math.max(1, Math.round(image.height * scale));
+
+  const context = canvas.getContext("2d");
+
+  if (!context) {
+    throw new Error("Image processing is unavailable in this browser.");
+  }
+
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+  const blob = await canvasToBlob(
+    canvas,
+    TARGET_IMAGE_TYPE,
+    TARGET_IMAGE_QUALITY
+  );
+  const baseName = file.name.replace(/\.[^.]+$/, "") || "menu";
+
+  return new File([blob], `${baseName}.jpg`, {
+    type: TARGET_IMAGE_TYPE,
+    lastModified: Date.now(),
+  });
+}
 
 export default function MenuUpload() {
   const router = useRouter();
@@ -27,10 +88,8 @@ export default function MenuUpload() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isFinding, setIsFinding] = useState(false);
-  const [selectedDrink, setSelectedDrink] =
-    useState<Exclude<DrinkType, "surprise"> | null>(null);
 
-  const canSubmit = Boolean(file && selectedDrink && !isLoading && !isFinding);
+  const canSubmit = Boolean(file && !isLoading && !isFinding);
 
   useEffect(() => {
     return () => {
@@ -40,7 +99,7 @@ export default function MenuUpload() {
     };
   }, [previewUrl]);
 
-  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const selectedFile = event.target.files?.[0];
     setError("");
 
@@ -55,21 +114,28 @@ export default function MenuUpload() {
       return;
     }
 
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
+    try {
+      const optimizedFile = await optimizeMenuImage(selectedFile);
 
-    setFile(selectedFile);
-    setPreviewUrl(URL.createObjectURL(selectedFile));
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+
+      setFile(optimizedFile);
+      setPreviewUrl(URL.createObjectURL(optimizedFile));
+    } catch (caughtError) {
+      setFile(null);
+      setPreviewUrl("");
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "That photo could not be prepared. Try another one."
+      );
+    }
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-
-    if (!selectedDrink) {
-      setError("Choose what you are drinking first.");
-      return;
-    }
 
     if (!file) {
       setError("Scan your menu first.");
@@ -78,8 +144,6 @@ export default function MenuUpload() {
 
     setIsFinding(true);
     setError("");
-
-    await new Promise((resolve) => setTimeout(resolve, 450));
     setIsFinding(false);
     setIsLoading(true);
 
@@ -105,7 +169,7 @@ export default function MenuUpload() {
       }
 
       sessionStorage.setItem("pour-decisions:menu", JSON.stringify(payload.items));
-      sessionStorage.setItem("pour-decisions:drink-type", selectedDrink);
+      sessionStorage.removeItem("pour-decisions:drink-type");
       router.push("/quiz");
     } catch (caughtError) {
       setError(
@@ -149,38 +213,8 @@ export default function MenuUpload() {
             </p>
           </div>
 
-          <div className="mt-10">
-            <p className="mb-4 text-center text-sm font-black uppercase tracking-[0.16em] text-[#6b736e]">
-              What are you drinking?
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              {drinkChips.map((drink) => {
-                const isSelected = selectedDrink === drink.value;
-
-                return (
-                  <button
-                    aria-pressed={isSelected}
-                    className={`flex min-h-16 items-center justify-center gap-2 rounded-full px-4 py-4 text-center text-base font-black transition duration-200 ease-out hover:-translate-y-0.5 active:scale-[0.97] ${
-                      isSelected
-                        ? "bg-[#053f35] text-white shadow-[0_16px_32px_rgba(5,63,53,0.22)]"
-                        : "bg-[#f6f7f4] text-[#171c19] shadow-[0_8px_24px_rgba(18,26,21,0.07)] hover:bg-[#eef2eb] hover:shadow-[0_12px_28px_rgba(18,26,21,0.10)]"
-                    }`}
-                    key={drink.value}
-                    onClick={() => setSelectedDrink(drink.value)}
-                    type="button"
-                  >
-                    <span className="inline-flex h-7 w-7 items-center justify-center text-xl leading-none">
-                      {drinkEmoji[drink.value]}
-                    </span>
-                    <span>{drink.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
           <form
-            className="mt-9 rounded-[32px] bg-white p-3 shadow-[0_26px_80px_rgba(17,24,20,0.15)] transition duration-200"
+            className="mt-10 rounded-[32px] bg-white p-3 shadow-[0_26px_80px_rgba(17,24,20,0.15)] transition duration-200"
             onSubmit={handleSubmit}
           >
             <label
