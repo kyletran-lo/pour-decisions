@@ -44,3 +44,14 @@ export type RecommendResponse = {
   top_pick: RecommendationPick;
   backup_pick: RecommendationPick;
 };
+
+export type SubmissionHistoryEntry = {
+  id: string;
+  createdAt: string;
+  quizAnswers: QuizAnswers;
+  menuItems: MenuItem[];
+  recommendation: RecommendResponse;
+  metadata: {
+    userAgent?: string;
+  };
+};

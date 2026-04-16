@@ -16,6 +16,21 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+## Admin submission history
+
+Create the Supabase table with `supabase/submission_history.sql`, then set
+these server-side environment variables:
+
+```bash
+ADMIN_HISTORY_TOKEN=
+SUPABASE_URL=
+SUPABASE_SECRET_KEY=
+```
+
+`ADMIN_HISTORY_TOKEN` unlocks the private admin history page at
+[http://localhost:3000/admin/history](http://localhost:3000/admin/history).
+Successful drink recommendations are saved permanently to Supabase.
+
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.

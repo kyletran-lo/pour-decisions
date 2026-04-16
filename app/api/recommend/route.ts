@@ -5,6 +5,10 @@ import {
   RECOMMENDATION_PROMPT,
 } from "@/lib/llms";
 import { isRecommendRequest } from "@/lib/session";
+import {
+  isSubmissionHistoryConfigured,
+  saveSubmissionHistory,
+} from "@/lib/submission-history";
 import type { RecommendResponse } from "@/types";
 
 export const runtime = "nodejs";
@@ -52,6 +56,19 @@ export async function POST(request: Request) {
 
     if (!parsed.top_pick || !parsed.backup_pick) {
       return errorResponse("Recommendations returned an invalid format.", 502);
+    }
+
+    if (isSubmissionHistoryConfigured()) {
+      await saveSubmissionHistory({
+        quizAnswers: body.quizAnswers,
+        menuItems: body.menuItems,
+        recommendation: parsed,
+        metadata: {
+          userAgent: request.headers.get("user-agent") ?? undefined,
+        },
+      });
+    } else {
+      console.warn("Submission history is not configured; skipping save.");
     }
 
     return NextResponse.json(parsed);
