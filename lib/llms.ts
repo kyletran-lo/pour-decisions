@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import type { ResponseFormatTextJSONSchemaConfig } from "openai/resources/responses/responses";
+import { makeParseableTextFormat } from "openai/lib/parser";
 import type { AnalyzeMenuResponse } from "@/types";
 
 let openaiClient: OpenAI | null = null;
@@ -33,41 +33,44 @@ Rules:
 - Omit fields that are not visible or cannot be inferred safely.
 `;
 
-export const MENU_ANALYSIS_FORMAT: ResponseFormatTextJSONSchemaConfig = {
-  type: "json_schema",
-  name: "menu_analysis",
-  strict: true,
-  schema: {
-    type: "object",
-    additionalProperties: false,
-    required: ["items"],
-    properties: {
-      items: {
-        type: "array",
+export const MENU_ANALYSIS_FORMAT = makeParseableTextFormat<AnalyzeMenuResponse>(
+  {
+    type: "json_schema",
+    name: "menu_analysis",
+    strict: true,
+    schema: {
+      type: "object",
+      additionalProperties: false,
+      required: ["items"],
+      properties: {
         items: {
-          type: "object",
-          additionalProperties: false,
-          required: ["name", "type", "price", "description"],
-          properties: {
-            name: {
-              type: "string",
-            },
-            type: {
-              type: ["string", "null"],
-              enum: ["beer", "wine", "cocktail", "sake", null],
-            },
-            price: {
-              type: ["string", "null"],
-            },
-            description: {
-              type: ["string", "null"],
+          type: "array",
+          items: {
+            type: "object",
+            additionalProperties: false,
+            required: ["name", "type", "price", "description"],
+            properties: {
+              name: {
+                type: "string",
+              },
+              type: {
+                type: ["string", "null"],
+                enum: ["beer", "wine", "cocktail", "sake", null],
+              },
+              price: {
+                type: ["string", "null"],
+              },
+              description: {
+                type: ["string", "null"],
+              },
             },
           },
         },
       },
     },
   },
-};
+  (content) => parseJsonResponse<AnalyzeMenuResponse>(content)
+);
 
 export const RECOMMENDATION_PROMPT = `
 You are Pour Decisions, an AI drink expert that helps users quickly decide what alcohol to order at a restaurant or bar.

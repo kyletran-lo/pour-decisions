@@ -73,7 +73,7 @@ function getReadableAnalyzeError(error: unknown) {
 }
 
 async function analyzeWithFastPath(imageUrl: string) {
-  const response = await getOpenAIClient().responses.parse<AnalyzeMenuResponse>({
+  const response = await getOpenAIClient().responses.parse({
     model: MENU_ANALYSIS_MODEL,
     max_output_tokens: MENU_ANALYSIS_MAX_OUTPUT_TOKENS,
     text: {
