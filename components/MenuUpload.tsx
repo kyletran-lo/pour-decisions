@@ -6,6 +6,81 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import type { AnalyzeMenuResponse } from "@/types";
 
+const MAX_UPLOAD_DIMENSION = 1600;
+const TARGET_IMAGE_TYPE = "image/jpeg";
+const TARGET_IMAGE_QUALITY = 0.82;
+
+function loadImage(file: File) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const image = new window.Image();
+
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(image);
+    };
+
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("That photo could not be processed."));
+    };
+
+    image.src = objectUrl;
+  });
+}
+
+function canvasToBlob(canvas: HTMLCanvasElement, type: string, quality: number) {
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error("That photo could not be prepared for upload."));
+        return;
+      }
+
+      resolve(blob);
+    }, type, quality);
+  });
+}
+
+async function optimizeMenuImage(file: File) {
+  if (file.size <= 1_500_000) {
+    return file;
+  }
+
+  const image = await loadImage(file);
+  const longestSide = Math.max(image.width, image.height);
+
+  if (longestSide <= MAX_UPLOAD_DIMENSION && file.type === TARGET_IMAGE_TYPE) {
+    return file;
+  }
+
+  const scale = Math.min(1, MAX_UPLOAD_DIMENSION / longestSide);
+  const canvas = document.createElement("canvas");
+
+  canvas.width = Math.max(1, Math.round(image.width * scale));
+  canvas.height = Math.max(1, Math.round(image.height * scale));
+
+  const context = canvas.getContext("2d");
+
+  if (!context) {
+    throw new Error("Image processing is unavailable in this browser.");
+  }
+
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+  const blob = await canvasToBlob(
+    canvas,
+    TARGET_IMAGE_TYPE,
+    TARGET_IMAGE_QUALITY
+  );
+  const baseName = file.name.replace(/\.[^.]+$/, "") || "menu";
+
+  return new File([blob], `${baseName}.jpg`, {
+    type: TARGET_IMAGE_TYPE,
+    lastModified: Date.now(),
+  });
+}
+
 export default function MenuUpload() {
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
@@ -24,7 +99,7 @@ export default function MenuUpload() {
     };
   }, [previewUrl]);
 
-  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const selectedFile = event.target.files?.[0];
     setError("");
 
@@ -39,12 +114,24 @@ export default function MenuUpload() {
       return;
     }
 
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
+    try {
+      const optimizedFile = await optimizeMenuImage(selectedFile);
 
-    setFile(selectedFile);
-    setPreviewUrl(URL.createObjectURL(selectedFile));
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+
+      setFile(optimizedFile);
+      setPreviewUrl(URL.createObjectURL(optimizedFile));
+    } catch (caughtError) {
+      setFile(null);
+      setPreviewUrl("");
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "That photo could not be prepared. Try another one."
+      );
+    }
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -57,8 +144,6 @@ export default function MenuUpload() {
 
     setIsFinding(true);
     setError("");
-
-    await new Promise((resolve) => setTimeout(resolve, 450));
     setIsFinding(false);
     setIsLoading(true);
 
