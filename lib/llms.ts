@@ -1,6 +1,13 @@
 import OpenAI from "openai";
+import type { ResponseFormatTextJSONSchemaConfig } from "openai/resources/responses/responses";
+import type { AnalyzeMenuResponse } from "@/types";
 
 let openaiClient: OpenAI | null = null;
+
+export const MENU_ANALYSIS_MODEL =
+  process.env.MENU_ANALYSIS_MODEL || "gpt-5.4-mini";
+export const MENU_ANALYSIS_FALLBACK_MODEL =
+  process.env.MENU_ANALYSIS_FALLBACK_MODEL || "gpt-4.1-mini";
 
 export function getOpenAIClient() {
   if (!process.env.OPENAI_API_KEY) {
@@ -15,30 +22,52 @@ export function getOpenAIClient() {
 }
 
 export const MENU_ANALYSIS_PROMPT = `
-You extract alcohol menu data from restaurant or bar menu images for Pour Decisions.
-
-Return only valid JSON with this shape:
-{
-  "items": [
-    {
-      "name": "string",
-      "type": "beer | wine | cocktail | sake",
-      "price": "string",
-      "description": "string",
-      "tags": ["string"]
-    }
-  ]
-}
+Extract alcohol menu items from this restaurant or bar menu image for Pour Decisions.
 
 Rules:
 - Include only valid alcoholic drinks: beer, wine, cocktails, sake.
 - Do not include food, desserts, coffee, soda, water, or zero-proof drinks.
 - Infer the drink type when it is obvious from the name or section.
 - Keep prices exactly as written.
-- Keep descriptions concise.
-- Use tags for useful traits like sweet, citrusy, crisp, smooth, bold, fruity, bitter, rich, refreshing, beer, wine, cocktail, sake.
+- Keep descriptions very short when present.
 - Omit fields that are not visible or cannot be inferred safely.
 `;
+
+export const MENU_ANALYSIS_FORMAT: ResponseFormatTextJSONSchemaConfig = {
+  type: "json_schema",
+  name: "menu_analysis",
+  strict: true,
+  schema: {
+    type: "object",
+    additionalProperties: false,
+    required: ["items"],
+    properties: {
+      items: {
+        type: "array",
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["name", "type", "price", "description"],
+          properties: {
+            name: {
+              type: "string",
+            },
+            type: {
+              type: ["string", "null"],
+              enum: ["beer", "wine", "cocktail", "sake", null],
+            },
+            price: {
+              type: ["string", "null"],
+            },
+            description: {
+              type: ["string", "null"],
+            },
+          },
+        },
+      },
+    },
+  },
+};
 
 export const RECOMMENDATION_PROMPT = `
 You are Pour Decisions, an AI drink expert that helps users quickly decide what alcohol to order at a restaurant or bar.
@@ -92,4 +121,26 @@ export function parseJsonResponse<T>(content: string): T {
     .replace(/\s*```$/i, "");
 
   return JSON.parse(json) as T;
+}
+
+export function isAnalyzeMenuResponse(
+  value: unknown
+): value is AnalyzeMenuResponse {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const items = (value as { items?: unknown }).items;
+
+  if (!Array.isArray(items)) {
+    return false;
+  }
+
+  return items.every((item) => {
+    if (!item || typeof item !== "object") {
+      return false;
+    }
+
+    return typeof (item as { name?: unknown }).name === "string";
+  });
 }
