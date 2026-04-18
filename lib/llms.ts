@@ -28,9 +28,14 @@ Rules:
 - Include only valid alcoholic drinks: beer, wine, cocktails, sake.
 - Do not include food, desserts, coffee, soda, water, or zero-proof drinks.
 - Infer the drink type when it is obvious from the name or section.
+- Add category when visible or safely inferred:
+  - Cocktails: base spirit or main style, such as whiskey, vodka, tequila, mezcal, gin, rum, brandy, spritz.
+  - Beer: beer style, such as IPA, lager, pilsner, stout, porter, wheat, sour, saison, cider.
+  - Wine: red, white, rose, sparkling, orange, dessert.
+  - Sake: junmai, ginjo, daiginjo, nigori, sparkling.
 - Keep prices exactly as written.
 - Keep descriptions very short when present.
-- Omit fields that are not visible or cannot be inferred safely.
+- Use null for fields that are not visible or cannot be inferred safely.
 `;
 
 export const MENU_ANALYSIS_FORMAT = makeParseableTextFormat<AnalyzeMenuResponse>(
@@ -48,7 +53,7 @@ export const MENU_ANALYSIS_FORMAT = makeParseableTextFormat<AnalyzeMenuResponse>
           items: {
             type: "object",
             additionalProperties: false,
-            required: ["name", "type", "price", "description"],
+            required: ["name", "type", "price", "description", "category"],
             properties: {
               name: {
                 type: "string",
@@ -61,6 +66,9 @@ export const MENU_ANALYSIS_FORMAT = makeParseableTextFormat<AnalyzeMenuResponse>
                 type: ["string", "null"],
               },
               description: {
+                type: ["string", "null"],
+              },
+              category: {
                 type: ["string", "null"],
               },
             },
@@ -103,6 +111,7 @@ Rules:
 - Clean the menu and use only valid drinks.
 - Remove drinks above budget_max.
 - Prioritize quizAnswers.drink_type unless it is "surprise".
+- Prioritize quizAnswers.drink_category when it is present and not "surprise".
 - Match vibes this way:
   - Easy & smooth means mellow, low bitterness, easy drinking.
   - Sweet & fun means fruity, sweeter, playful.

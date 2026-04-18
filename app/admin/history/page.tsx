@@ -123,6 +123,11 @@ export default async function AdminHistoryPage({
                       </div>
                       <div className="grid min-w-48 gap-2 text-sm font-black text-[#111111]">
                         <span>Drink: {submission.quizAnswers.drink_type}</span>
+                        {submission.quizAnswers.drink_category ? (
+                          <span>
+                            Type: {submission.quizAnswers.drink_category}
+                          </span>
+                        ) : null}
                         <span>Vibe: {submission.quizAnswers.vibe}</span>
                         <span>
                           Budget: ${submission.quizAnswers.budget_max}
