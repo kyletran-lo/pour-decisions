@@ -40,6 +40,8 @@ export function isQuizAnswers(value: unknown): value is QuizAnswers {
   return (
     typeof answers.drink_type === "string" &&
     drinkTypes.has(answers.drink_type as DrinkType) &&
+    (typeof answers.drink_category === "undefined" ||
+      typeof answers.drink_category === "string") &&
     typeof answers.vibe === "string" &&
     vibes.has(answers.vibe as Vibe) &&
     typeof answers.budget_max === "number" &&

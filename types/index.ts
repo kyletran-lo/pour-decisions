@@ -22,6 +22,7 @@ export type Vibe =
 
 export type QuizAnswers = {
   drink_type: DrinkType;
+  drink_category?: string;
   vibe: Vibe;
   budget_max: number;
 };

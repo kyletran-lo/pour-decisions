@@ -170,6 +170,7 @@ export default function MenuUpload() {
 
       sessionStorage.setItem("pour-decisions:menu", JSON.stringify(payload.items));
       sessionStorage.removeItem("pour-decisions:drink-type");
+      sessionStorage.removeItem("pour-decisions:drink-category");
       router.push("/quiz");
     } catch (caughtError) {
       setError(

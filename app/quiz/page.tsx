@@ -32,6 +32,197 @@ const drinkTypeLabels: Record<DrinkType, string> = {
   surprise: "🎲 Surprise me",
 };
 
+const categoryLabels: Record<string, string> = {
+  surprise: "🎲 Surprise me",
+  Whiskey: "🥃 Whiskey",
+  Vodka: "🍸 Vodka",
+  Tequila: "🍹 Tequila",
+  Mezcal: "🔥 Mezcal",
+  Gin: "🌿 Gin",
+  Rum: "🍍 Rum",
+  Brandy: "🍷 Brandy",
+  Spritz: "✨ Spritz",
+  Martini: "🍸 Martini",
+  Margarita: "🍋 Margarita",
+  IPA: "🍺 IPA",
+  Lager: "🍺 Lager",
+  Pilsner: "🍺 Pilsner",
+  Stout: "☕ Stout",
+  Porter: "🍺 Porter",
+  Wheat: "🌾 Wheat",
+  Sour: "🍒 Sour",
+  Saison: "🌾 Saison",
+  Cider: "🍎 Cider",
+  "Pale Ale": "🍺 Pale ale",
+  Red: "🍷 Red",
+  White: "🥂 White",
+  Rose: "🌸 Rose",
+  Sparkling: "🥂 Sparkling",
+  Orange: "🍊 Orange",
+  Dessert: "🍯 Dessert",
+  Junmai: "🍶 Junmai",
+  Ginjo: "🍶 Ginjo",
+  Daiginjo: "🍶 Daiginjo",
+  Nigori: "🍶 Nigori",
+};
+
+const categoryRules: Array<{
+  label: string;
+  drinkTypes: readonly MenuDrinkType[];
+  aliases: readonly string[];
+}> = [
+  {
+    label: "Whiskey",
+    drinkTypes: ["cocktail"],
+    aliases: ["whiskey", "whisky", "bourbon", "rye", "scotch"],
+  },
+  {
+    label: "Vodka",
+    drinkTypes: ["cocktail"],
+    aliases: ["vodka"],
+  },
+  {
+    label: "Tequila",
+    drinkTypes: ["cocktail"],
+    aliases: ["tequila", "blanco", "reposado", "anejo", "añejo"],
+  },
+  {
+    label: "Mezcal",
+    drinkTypes: ["cocktail"],
+    aliases: ["mezcal"],
+  },
+  {
+    label: "Gin",
+    drinkTypes: ["cocktail"],
+    aliases: ["gin"],
+  },
+  {
+    label: "Rum",
+    drinkTypes: ["cocktail"],
+    aliases: ["rum", "daiquiri", "mojito"],
+  },
+  {
+    label: "Brandy",
+    drinkTypes: ["cocktail"],
+    aliases: ["brandy", "cognac"],
+  },
+  {
+    label: "Spritz",
+    drinkTypes: ["cocktail"],
+    aliases: ["spritz", "aperol", "campari"],
+  },
+  {
+    label: "Martini",
+    drinkTypes: ["cocktail"],
+    aliases: ["martini"],
+  },
+  {
+    label: "Margarita",
+    drinkTypes: ["cocktail"],
+    aliases: ["margarita"],
+  },
+  {
+    label: "IPA",
+    drinkTypes: ["beer"],
+    aliases: ["ipa", "india pale ale", "hazy"],
+  },
+  {
+    label: "Pale Ale",
+    drinkTypes: ["beer"],
+    aliases: ["pale ale"],
+  },
+  {
+    label: "Lager",
+    drinkTypes: ["beer"],
+    aliases: ["lager", "helles"],
+  },
+  {
+    label: "Pilsner",
+    drinkTypes: ["beer"],
+    aliases: ["pilsner", "pils"],
+  },
+  {
+    label: "Stout",
+    drinkTypes: ["beer"],
+    aliases: ["stout"],
+  },
+  {
+    label: "Porter",
+    drinkTypes: ["beer"],
+    aliases: ["porter"],
+  },
+  {
+    label: "Wheat",
+    drinkTypes: ["beer"],
+    aliases: ["wheat", "hefeweizen", "witbier"],
+  },
+  {
+    label: "Sour",
+    drinkTypes: ["beer"],
+    aliases: ["sour", "gose", "lambic"],
+  },
+  {
+    label: "Saison",
+    drinkTypes: ["beer"],
+    aliases: ["saison", "farmhouse"],
+  },
+  {
+    label: "Cider",
+    drinkTypes: ["beer"],
+    aliases: ["cider"],
+  },
+  {
+    label: "Sparkling",
+    drinkTypes: ["wine", "sake"],
+    aliases: ["sparkling", "champagne", "prosecco", "cava"],
+  },
+  {
+    label: "Rose",
+    drinkTypes: ["wine"],
+    aliases: ["rose", "rosé"],
+  },
+  {
+    label: "Orange",
+    drinkTypes: ["wine"],
+    aliases: ["orange"],
+  },
+  {
+    label: "White",
+    drinkTypes: ["wine"],
+    aliases: ["white", "chardonnay", "sauvignon blanc", "pinot grigio"],
+  },
+  {
+    label: "Red",
+    drinkTypes: ["wine"],
+    aliases: ["red", "pinot noir", "cabernet", "merlot", "syrah"],
+  },
+  {
+    label: "Dessert",
+    drinkTypes: ["wine"],
+    aliases: ["dessert", "port", "sherry"],
+  },
+  {
+    label: "Daiginjo",
+    drinkTypes: ["sake"],
+    aliases: ["daiginjo"],
+  },
+  {
+    label: "Ginjo",
+    drinkTypes: ["sake"],
+    aliases: ["ginjo"],
+  },
+  {
+    label: "Junmai",
+    drinkTypes: ["sake"],
+    aliases: ["junmai"],
+  },
+  {
+    label: "Nigori",
+    drinkTypes: ["sake"],
+    aliases: ["nigori"],
+  },
+];
+
 const vibes = [
   "easy & smooth",
   "sweet & fun",
@@ -66,10 +257,93 @@ function getAvailableDrinkTypes(menuItems: MenuItem[]) {
   return availableDrinkTypes;
 }
 
+function normalizeSearchText(value: string) {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function hasPhrase(text: string, phrase: string) {
+  const normalizedPhrase = normalizeSearchText(phrase);
+  const escapedPhrase = normalizedPhrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  return new RegExp(`(^| )${escapedPhrase}( |$)`).test(text);
+}
+
+function toTitleCase(value: string) {
+  return value
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) =>
+      word.length <= 3
+        ? word.toUpperCase()
+        : `${word[0]?.toUpperCase() ?? ""}${word.slice(1).toLowerCase()}`
+    )
+    .join(" ");
+}
+
+function getMenuItemCategory(item: MenuItem) {
+  if (!isMenuDrinkType(item.type)) {
+    return null;
+  }
+
+  const searchText = normalizeSearchText(
+    [
+      item.category,
+      item.name,
+      item.description,
+      ...(Array.isArray(item.tags) ? item.tags : []),
+    ]
+      .filter(Boolean)
+      .join(" ")
+  );
+
+  const matchedRule = categoryRules.find(
+    (rule) =>
+      rule.drinkTypes.includes(item.type as MenuDrinkType) &&
+      rule.aliases.some((alias) => hasPhrase(searchText, alias))
+  );
+
+  if (matchedRule) {
+    return matchedRule.label;
+  }
+
+  if (item.category) {
+    return toTitleCase(item.category);
+  }
+
+  return null;
+}
+
+function getAvailableDrinkCategories(
+  menuItems: MenuItem[],
+  selectedDrinkType: DrinkType
+) {
+  const categories = new Set<string>();
+
+  menuItems.forEach((item) => {
+    if (selectedDrinkType !== "surprise" && item.type !== selectedDrinkType) {
+      return;
+    }
+
+    const category = getMenuItemCategory(item);
+
+    if (category) {
+      categories.add(category);
+    }
+  });
+
+  return [...categories];
+}
+
 export default function QuizPage() {
   const router = useRouter();
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [drinkType, setDrinkType] = useState<DrinkType>("surprise");
+  const [drinkCategory, setDrinkCategory] = useState("surprise");
   const [vibe, setVibe] = useState<Vibe>("fresh & light");
   const [budgetIndex, setBudgetIndex] = useState(2);
   const [error, setError] = useState("");
@@ -88,6 +362,9 @@ export default function QuizPage() {
       const storedDrinkType = sessionStorage.getItem(
         "pour-decisions:drink-type"
       );
+      const storedDrinkCategory = sessionStorage.getItem(
+        "pour-decisions:drink-category"
+      );
 
       setMenuItems(parsed);
 
@@ -96,6 +373,9 @@ export default function QuizPage() {
         (parsedDrinkTypes.size === 0 || parsedDrinkTypes.has(storedDrinkType))
       ) {
         setDrinkType(storedDrinkType);
+        if (storedDrinkCategory) {
+          setDrinkCategory(storedDrinkCategory);
+        }
       } else if (parsedDrinkTypes.size === 1) {
         setDrinkType([...parsedDrinkTypes][0]);
       }
@@ -109,12 +389,29 @@ export default function QuizPage() {
     () => getAvailableDrinkTypes(menuItems),
     [menuItems]
   );
+  const availableDrinkCategories = useMemo(
+    () => getAvailableDrinkCategories(menuItems, drinkType),
+    [drinkType, menuItems]
+  );
+  const drinkCategoryOptions = useMemo(
+    () => ["surprise", ...availableDrinkCategories],
+    [availableDrinkCategories]
+  );
   const budgetMax = budgetOptions[budgetIndex];
   const budgetLabel = budgetMax === 20 ? "$20+" : `$${budgetMax}`;
   const budgetProgress = useMemo(
     () => `${(budgetIndex / (budgetOptions.length - 1)) * 100}%`,
     [budgetIndex]
   );
+
+  useEffect(() => {
+    if (
+      drinkCategory !== "surprise" &&
+      !availableDrinkCategories.includes(drinkCategory)
+    ) {
+      setDrinkCategory("surprise");
+    }
+  }, [availableDrinkCategories, drinkCategory]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -133,6 +430,14 @@ export default function QuizPage() {
       return;
     }
 
+    if (
+      drinkCategory !== "surprise" &&
+      !availableDrinkCategories.includes(drinkCategory)
+    ) {
+      setError(`${drinkCategory} was not found on this menu.`);
+      return;
+    }
+
     setIsLoading(true);
     setError("");
 
@@ -145,6 +450,7 @@ export default function QuizPage() {
         body: JSON.stringify({
           quizAnswers: {
             drink_type: drinkType,
+            drink_category: drinkCategory,
             vibe,
             budget_max: budgetMax,
           },
@@ -229,11 +535,34 @@ export default function QuizPage() {
                   availableDrinkTypes.size > 0 &&
                   !availableDrinkTypes.has(value)
                 }
-                onSelect={setDrinkType}
+                onSelect={(value) => {
+                  setDrinkType(value);
+                  setDrinkCategory("surprise");
+                  sessionStorage.setItem("pour-decisions:drink-type", value);
+                  sessionStorage.removeItem("pour-decisions:drink-category");
+                }}
                 options={drinkTypes}
                 selected={drinkType}
               />
             </div>
+
+            {availableDrinkCategories.length ? (
+              <div className="rounded-[26px] bg-[#fbfcfa] p-5">
+                <QuizStep
+                  label="🥃 Which kind sounds best?"
+                  getOptionLabel={(value) => categoryLabels[value] ?? value}
+                  onSelect={(value) => {
+                    setDrinkCategory(value);
+                    sessionStorage.setItem(
+                      "pour-decisions:drink-category",
+                      value
+                    );
+                  }}
+                  options={drinkCategoryOptions}
+                  selected={drinkCategory}
+                />
+              </div>
+            ) : null}
 
             <div className="rounded-[26px] bg-[#fbfcfa] p-5">
               <QuizStep
